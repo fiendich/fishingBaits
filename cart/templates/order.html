@@ -1,0 +1,12 @@
+<h2>Оформление заказа</h2>
+
+<form method="POST">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Отправить заказ</button>
+</form>
+
+<h3>Содержимое корзины:</h3>
+{% for cart_item in cart_items %}
+  <p>{{ cart_item.product.name }} ({{ cart_item.color.name }}): {{ cart_item.quantity }}</p>
+{% endfor %}

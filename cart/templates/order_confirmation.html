@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <h2>Спасибо за ваш заказ!</h2>
+        <p>Мы получили информацию о вашем заказе и свяжемся с вами в ближайшее время.</p>
+        <a class="btn btn-success" href="{% url 'lure_catalog' %}">Каталог</a>
+    </div>
+
+{% endblock %}
+

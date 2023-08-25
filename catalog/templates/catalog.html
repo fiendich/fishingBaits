@@ -1,0 +1,285 @@
+<!-- catalog_template.html -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+    <style>
+        .swiper {
+            width: 100%;
+            height: 300px;
+        }
+
+        .slider-image {
+            text-align: center;
+
+        }
+
+        .slider-image img {
+            max-width: 100%;
+        }
+
+        .swiper .swiper-button-prev::after,
+        .swiper .swiper-button-next::after {
+            color: green;
+        }
+
+        .swiper .swiper-pagination {
+            bottom: 0;
+        }
+
+        .swiper .swiper-pagination-bullet {
+            width: 10px;
+            height: 10px;
+            background-color: green;
+        }
+
+        .swiper .swiper-scrollbar-drag {
+            cursor: pointer;
+            background-color: #7a956b;
+        }
+
+        .color-buttons button {
+            border: none;
+            padding: 5px 10px;
+            margin-right: 5px;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+
+        .color-buttons button.selected {
+            background-color: darkgreen;
+            color: white;
+        }
+
+        .color-buttons button:not(.selected) {
+            background-color: transparent;
+            border: 1px solid darkgreen;
+            color: darkgreen;
+        }
+    </style>
+    <!-- Slider main container -->
+    <div class="swiper">
+        <!-- Additional required wrapper -->
+        <div class="swiper-wrapper">
+            <!-- Slides -->
+            <div class="swiper-slide">
+                <div class="slider-image">
+                    <img src="media/colors/1.jpg" alt="">
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="slider-image">
+                    <img src="media/colors/2.jpg" alt="">
+                </div>
+            </div>
+            <div class="swiper-slide">
+                <div class="slider-image">
+                    <img src="media/colors/3.jpg" alt="">
+                </div>
+            </div>
+
+        </div>
+        <!-- If we need pagination -->
+        <div class="swiper-pagination"></div>
+
+        <!-- If we need navigation buttons -->
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+
+        <!-- If we need scrollbar -->
+        <div class="swiper-scrollbar"></div>
+    </div>
+
+    <div class="container mt-5 mb-5">
+        <form method="get" class="form-inline mb-3">
+            {{ brand_filter_form.brand }}
+            <button type="submit" class="btn btn-success">Применить фильтр</button>
+        </form>
+        <div class="row">
+            {% for lure in lures %}
+                <div class="col-md-4 mb-5">
+
+                    <div class="card h-100 product-card" data-product-id="{{ lure.id }}">
+                        <img class="card-img-top" id="product-image-{{ lure.id }}"
+                             src="{{ lure.colors.first.image.url }}"
+                             alt="{{ lure.name }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ lure.name }}</h5>
+                            <p class="card-text">{{ lure.description }}</p>
+                            <p class="card-text">Цена: {{ lure.price }} BYN</p>
+                            <p>Цвета:</p>
+                            <div class="color-buttons">
+                                {% for color in lure.colors.all %}
+                                    <button type="button"
+                                            onclick="changeProductImage('{{ lure.id }}', '{{ color.image.url|escapejs }}')"
+                                            value="{{ color.id }}"
+                                            {% if forloop.first %}class="selected"{% endif %}>{{ color.name }}
+                                    </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+
+                            <button class="btn btn-success" type="submit" onclick="addToCart('{{ lure.id }}')">
+                                Добавить в корзину
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            {% empty %}
+                <div class="col-12 text-center">
+                    <p>No lures available.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+
+        {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1" class="page-link">&laquo;</a>
+                    <a href="?page={{ page_obj.previous_page_number }}" class="page-link">предыдущая</a>
+                {% endif %}
+
+                {% for page in page_obj.paginator.page_range %}
+                    {% if page_obj.number == page %}
+                        <a href="?page={{ page }}" class="page-link current-page">{{ page }}</a>
+                    {% else %}
+                        <a href="?page={{ page }}" class="page-link">{{ page }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="page-link">следующая</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}" class="page-link">&raquo;</a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Модальное окно для оповещения о добавлении товара в корзину -->
+        <div class="modal fade" id="addToCartModal" tabindex="-1" role="dialog" aria-labelledby="addToCartModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addToCartModalLabel">Товар добавлен в корзину</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Товар успешно добавлен в корзину.
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{% url 'lure_catalog' %}" class="btn btn-secondary">Вернуться в каталог</a>
+                        <a href="{% url 'cart' %}" class="btn btn-primary">Перейти в корзину</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css"
+    />
+    <script type="module">
+        import Swiper from 'https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.mjs'
+
+        const swiper = new Swiper('.swiper', {
+            // Optional parameters
+            direction: 'horizontal',
+            loop: true,
+
+            // If we need pagination
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+
+            // Navigation arrows
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+
+            // And if we need scrollbar
+            scrollbar: {
+                el: '.swiper-scrollbar',
+                draggable: true
+            },
+        });
+    </script>
+    <script>
+        function changeProductImage(productId, imageUrl) {
+            var productImage = document.getElementById('product-image-' + productId);
+            productImage.src = imageUrl;
+
+            var buttons = document.querySelectorAll('.product-card[data-product-id="' + productId + '"] .color-buttons button');
+            buttons.forEach(function (button) {
+                button.classList.remove('selected');
+            });
+
+            event.target.classList.add('selected');
+        }
+
+        // Выбираем первый цвет и его картинку при загрузке страницы
+        var firstButton = document.querySelector('.color-buttons button');
+        firstButton.classList.add('selected');
+
+        //changeProductImage(firstButton.getAttribute('onclick').match(/'([^']+)'/)[1]);
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
+        function addToCart(productId) {
+            var colorId = 0;
+            var buttons = document.querySelectorAll('.product-card[data-product-id="' + productId + '"] .color-buttons button');
+            buttons.forEach(function (button) {
+                if (button.classList.contains('selected')) {
+                    colorId = button.value;
+                }
+            });
+
+            fetch(`/add-to-cart/${productId}/${colorId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') // Получаем значение CSRF-токена
+                },
+                body: JSON.stringify({}) // Если не требуется отправлять тело запроса
+            })
+                .then(response => {
+                    $(document).ready(function () {
+                        $('#addToCartModal').modal('show');
+                    });
+                })
+                .catch(error => {
+                    // Обработка ошибки
+                });
+
+        }
+    </script>
+    <!-- Подключение jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Подключение плагина Bootstrap JavaScript -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
+{% endblock %}
